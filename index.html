@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mein Webprojekt</title>
+    <link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+    <!-- Registrierung -->
+    <h2>Registrierung</h2>
+    <form id="register-form">
+        <input type="text" id="register-username" placeholder="Benutzername" required>
+        <input type="password" id="register-password" placeholder="Passwort" required>
+        <button type="submit">Registrieren</button>
+    </form>
+
+    <!-- Login -->
+    <h2>Login</h2>
+    <form id="login-form">
+        <input type="text" id="login-username" placeholder="Benutzername" required>
+        <input type="password" id="login-password" placeholder="Passwort" required>
+        <button type="submit">Einloggen</button>
+    </form>
+
+    <!-- Formular für neue Daten -->
+    <h1>Willkommen zu meinem Webprojekt</h1>
+    <form id="daten-form" method="POST" action="/submit">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+        <br><br>
+        <label for="email">E-Mail:</label>
+        <input type="email" id="email" name="email" required>
+        <br><br>
+        <button type="submit">Abschicken</button>
+    </form>
+
+    <!-- Gespeicherte Daten anzeigen -->
+    <h2>Gespeicherte Daten</h2>
+    <ul id="data-list"></ul>
+
+    <!-- Button für CSV-Export -->
+    <button id="export-button">Daten exportieren</button>
+
+    <!-- Skripte -->
+    <script>
+        // Registrierung
+        document.getElementById('register-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+            alert(await response.text());
+        };
+
+        // Login
+        document.getElementById('login-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+            alert(await response.text());
+        };
+
+        // Daten abrufen und anzeigen
+        async function fetchData() {
+            const response = await fetch('/data');
+            const data = await response.json();
+
+            const dataList = document.getElementById('data-list');
+            dataList.innerHTML = '';
+
+            data.forEach((item) => {
+                const li = document.createElement('li');
+                li.textContent = `Name: ${item.name}, E-Mail: ${item.email}`;
+
+                // Bearbeiten-Button erstellen
+                const editButton = document.createElement('button');
+                editButton.textContent = 'Bearbeiten';
+                editButton.onclick = async () => {
+                    const newName = prompt('Neuer Name:', item.name);
+                    const newEmail = prompt('Neue E-Mail:', item.email);
+
+                    if (newName && newEmail) {
+                        await fetch('/update', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: item.id, name: newName, email: newEmail }),
+                        });
+                        fetchData(); // Nach dem Bearbeiten die Datenliste neu laden
+                    }
+                };
+
+                li.appendChild(editButton);
+                dataList.appendChild(li);
+            });
+        }
+
+        // CSV-Export
+        document.getElementById('export-button').onclick = () => {
+            window.location.href = '/export'; // Startet den Download
+        };
+
+        // Daten abrufen, wenn die Seite geladen wird
+        window.onload = fetchData;
+    </script>
+</body>
+</html>
