@@ -3,7 +3,7 @@ const express = require('express'); // Express für den Server
 const sqlite3 = require('sqlite3').verbose(); // SQLite für die Datenbank
 const bodyParser = require('body-parser'); // Middleware zur Verarbeitung von Formulardaten
 const session = require('express-session'); // Session-Management
-const bcrypt = require('bcrypt'); // Passwort-Hashing
+const bcryptjs = require('bcryptjs'); // Passwort-Hashing
 const fs = require('fs'); // Dateiverwaltung
 const fastCsv = require('fast-csv'); // Für CSV-Exporte
 
@@ -57,7 +57,7 @@ app.get('/', (req, res) => {
 // Registrierung
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10); // Passwort hashen
+    const hashedPassword = await bcryptjs.hash(password, 10); // Passwort hashen
 
     const query = `INSERT INTO users (username, password) VALUES (?, ?)`;
     db.run(query, [username, hashedPassword], (err) => {
@@ -76,7 +76,7 @@ app.post('/login', (req, res) => {
 
     const query = `SELECT * FROM users WHERE username = ?`;
     db.get(query, [username], async (err, user) => {
-        if (err || !user || !(await bcrypt.compare(password, user.password))) {
+        if (err || !user || !(await bcryptjs.compare(password, user.password))) {
             res.status(401).send('Ungültige Anmeldedaten.');
             return;
         }
